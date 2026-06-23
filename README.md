@@ -32,33 +32,50 @@ command — and keeps the connection warm so each key press takes **~0–2 ms** 
 > Other Sony models may work if they expose the same control service, but only the WH-1000XM5
 > has been tested. See [docs/PROTOCOL.md](docs/PROTOCOL.md).
 
-## Install
+## Install (easy — recommended)
+
+No build tools or .NET install required — the download bundles everything.
+
+1. Download **`XM5Ambient-<version>-win-x64.zip`** from the
+   [**Releases**](https://github.com/MamaJo3/sony-mx5-desktop-toggle/releases) page.
+2. Right-click the zip → **Extract All**.
+3. Double-click **`Setup.cmd`**. (Windows SmartScreen may warn about an unrecognised app — click
+   **More info → Run anyway**; it's unsigned, like most small open-source tools.)
+
+That's it. Press **Ctrl+Alt+A** to toggle ambient ↔ noise cancelling, and open
+**"XM5 Ambient Settings"** (added to your Desktop & Start menu) to change the shortcut or behaviour.
+
+To remove it later, run **`Uninstall.cmd`** from the same extracted folder.
+
+## Install from source
+
+Requires the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```powershell
-git clone <your-fork-url> sony-xm5-ambient
+git clone https://github.com/MamaJo3/sony-mx5-desktop-toggle sony-xm5-ambient
 cd sony-xm5-ambient
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1     # build + install + autostart
+powershell -ExecutionPolicy Bypass -File .\uninstall.ps1   # remove
 ```
 
-This builds the apps, installs them to `%LOCALAPPDATA%\XM5Ambient`, starts the daemon, sets it to
-auto-start at login, and adds an **"XM5 Ambient Settings"** shortcut to your Desktop.
-
-Then press **Ctrl+Alt+A** to toggle ambient ↔ noise cancelling, or open the Settings app to
-customise the shortcut and behaviour.
-
-To remove everything:
+Build without installing:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
-```
-
-## Build only (no install)
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\build.ps1          # outputs to .\dist
+powershell -ExecutionPolicy Bypass -File .\build.ps1       # outputs to .\dist
 # or
 dotnet build SonyXm5Ambient.sln -c Release
 ```
+
+## Releasing (maintainers)
+
+Push a version tag and GitHub Actions builds the self-contained zip and publishes a Release:
+
+```powershell
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Or build the release bundle locally with `.\publish-release.ps1 -Version v1.0.0` (output in `.\release`).
 
 ## Usage
 
