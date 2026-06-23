@@ -1,0 +1,19 @@
+sony-mx5-desktop-toggle
+Copyright (C) 2026 The project authors
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License, version 3, as published by the
+Free Software Foundation. See the LICENSE file for the full text.
+
+ATTRIBUTION
+-----------
+This project's Bluetooth protocol implementation is derived from prior
+reverse-engineering work:
+
+  * Gadgetbridge — https://codeberg.org/Freeyourgadget/Gadgetbridge
+    (AGPL-3.0): the v2 Ambient Sound Control command layout.
+  * SonyHeadphonesClient — https://github.com/Plutoberth/SonyHeadphonesClient
+    (GPL-3.0): the MDR message framing, checksum/escaping, and service UUID.
+
+Sony, WH-1000XM5, and related marks belong to Sony Group Corporation. This
+project is not affiliated with or endorsed by Sony.
