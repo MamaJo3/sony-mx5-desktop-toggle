@@ -62,7 +62,19 @@ dotnet build SonyXm5Ambient.sln -c Release
 
 ## Usage
 
-Open **XM5 Ambient Settings** (desktop shortcut) to configure:
+### Opening the settings window
+
+- **If you installed** (`install.ps1`): double-click the **"XM5 Ambient Settings"** icon on your
+  Desktop. (It also lives at `%LOCALAPPDATA%\XM5Ambient\sony-ambient-config.exe` — paste that into
+  the Start menu / Run dialog to launch it.)
+- **If you only built** (`build.ps1`): run **`dist\sony-ambient-config.exe`**.
+
+You don't need the GUI to *use* the shortcut — the daemon runs on its own. The GUI is just for
+changing the hotkey and behaviour.
+
+### Settings
+
+The window lets you configure:
 
 | Setting | What it does |
 |---|---|
