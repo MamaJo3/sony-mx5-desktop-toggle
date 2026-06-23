@@ -1,0 +1,35 @@
+sony-xm5-ambient — control Sony WH-1000XM5 Ambient Sound Control from Windows
+Copyright (C) 2026 The sony-xm5-ambient authors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+--------------------------------------------------------------------------------
+This LICENSE file carries the standard GPL-3.0 grant notice above. The full
+license text is long; include the canonical copy when you publish:
+
+  - Download: https://www.gnu.org/licenses/gpl-3.0.txt
+  - Or, on GitHub: "Add file" -> "Create new file" -> name it LICENSE ->
+    "Choose a license template" -> "GNU General Public License v3.0".
+
+ATTRIBUTION
+This project's Bluetooth protocol implementation is derived from prior
+reverse-engineering work:
+
+  * Gadgetbridge — https://codeberg.org/Freeyourgadget/Gadgetbridge
+    (AGPL-3.0): the v2 Ambient Sound Control command layout.
+  * SonyHeadphonesClient — https://github.com/Plutoberth/SonyHeadphonesClient
+    (GPL-3.0): the MDR message framing, checksum/escaping, and service UUID.
+
+Sony, WH-1000XM5, and related marks belong to Sony. This project is not
+affiliated with or endorsed by Sony.

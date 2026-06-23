@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{282BC99D-F2D2-4CBB-8020-905C09C2470C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonyXm5.Core", "src\SonyXm5.Core\SonyXm5.Core.csproj", "{79919E09-92D9-4677-80A8-934B3DB2B0D8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonyXm5.Daemon", "src\SonyXm5.Daemon\SonyXm5.Daemon.csproj", "{D675914D-EB9F-482C-92A4-57B875DF34D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SonyXm5.Settings", "src\SonyXm5.Settings\SonyXm5.Settings.csproj", "{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79919E09-92D9-4677-80A8-934B3DB2B0D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79919E09-92D9-4677-80A8-934B3DB2B0D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79919E09-92D9-4677-80A8-934B3DB2B0D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79919E09-92D9-4677-80A8-934B3DB2B0D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D675914D-EB9F-482C-92A4-57B875DF34D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D675914D-EB9F-482C-92A4-57B875DF34D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D675914D-EB9F-482C-92A4-57B875DF34D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D675914D-EB9F-482C-92A4-57B875DF34D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{79919E09-92D9-4677-80A8-934B3DB2B0D8} = {282BC99D-F2D2-4CBB-8020-905C09C2470C}
+		{D675914D-EB9F-482C-92A4-57B875DF34D6} = {282BC99D-F2D2-4CBB-8020-905C09C2470C}
+		{5E3CD57E-E7FE-4E6F-91E5-73AD7B978493} = {282BC99D-F2D2-4CBB-8020-905C09C2470C}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,11 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+dist/
+*.user
+.vs/
+
+# Runtime files (created next to the executables at runtime)
+config.json
+state.txt
+*.log
