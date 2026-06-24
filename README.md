@@ -19,6 +19,7 @@ command — and keeps the connection warm so each key press takes **~0–2 ms** 
 - Choose what the two modes are: **Ambient Sound** (with level 0–20), **Noise Cancelling**,
   **Off**, or **Wind Noise Reduction**.
 - **Settings GUI** — no config files to hand-edit.
+- **System-tray icon** — shows the daemon is running; right-click for Settings / Reconnect / Quit.
 - **Instant** — a small background daemon keeps the Bluetooth link warm.
 - **Auto-discovery** — finds your headphones by their control service (no MAC address to configure).
 

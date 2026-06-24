@@ -1,8 +1,10 @@
 using System;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using SonyXm5.Core;
@@ -156,8 +158,6 @@ static class Program
     [DllImport("user32.dll", SetLastError = true)] static extern IntPtr SetWindowsHookEx(int idHook, HookProc lpfn, IntPtr hMod, uint dwThreadId);
     [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
     [DllImport("kernel32.dll", CharSet = CharSet.Auto)] static extern IntPtr GetModuleHandle(string name);
-    [DllImport("user32.dll")] static extern int GetMessage(out MSG m, IntPtr h, uint a, uint b);
-    [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr hwnd; public uint message; public IntPtr w; public IntPtr l; public uint time; public int x; public int y; }
     const int WH_KEYBOARD_LL = 13, WM_KEYDOWN = 0x100, WM_KEYUP = 0x101, WM_SYSKEYDOWN = 0x104, WM_SYSKEYUP = 0x105;
     static HookProc _hookProc;
 
@@ -181,14 +181,15 @@ static class Program
 
     static void OnPress()
     {
-        if (_cfg.behavior == "hold") _ = ApplyAsync(_cfg.modeA);
-        else { string target = _curMode == _cfg.modeA ? _cfg.modeB : _cfg.modeA; _ = ApplyAsync(target); }
+        if (_cfg.behavior == "hold") _ = Task.Run(() => ApplyAsync(_cfg.modeA));
+        else { string target = _curMode == _cfg.modeA ? _cfg.modeB : _cfg.modeA; _ = Task.Run(() => ApplyAsync(target)); }
     }
     static void OnRelease()
     {
-        if (_cfg.behavior == "hold") _ = ApplyAsync(_cfg.modeB);
+        if (_cfg.behavior == "hold") _ = Task.Run(() => ApplyAsync(_cfg.modeB));
     }
 
+    [STAThread]
     static int Main(string[] args)
     {
         _cfg = AppConfig.Load(CfgFile);
@@ -208,17 +209,77 @@ static class Program
         if (!fresh) return 0;
         ParseHotkey(_cfg.hotkey);
         Log($"daemon start  hotkey='{_cfg.hotkey}' behavior={_cfg.behavior} A={_cfg.modeA} B={_cfg.modeB} level={_cfg.ambientLevel}");
-
-        _ = ConnectAsync();
-
         if (_triggerVk == 0) { Log("invalid hotkey; nothing to bind"); return 1; }
+
+        _ = Task.Run(ConnectAsync);   // warm up the link off the UI thread
+
+        // Low-level keyboard hook (serviced by the WinForms message loop below).
         _hookProc = HookCb;
         var hook = SetWindowsHookEx(WH_KEYBOARD_LL, _hookProc, GetModuleHandle(null), 0);
         if (hook == IntPtr.Zero) { Log("SetWindowsHookEx FAILED"); return 1; }
         Log("keyboard hook installed");
 
-        while (GetMessage(out _, IntPtr.Zero, 0, 0) > 0) { }
+        Application.EnableVisualStyles();
+        using var tray = CreateTray();
+        Application.Run(new ApplicationContext());   // pumps messages -> keeps the hook + tray alive
+
+        tray.Visible = false;
         GC.KeepAlive(mtx);
         return 0;
+    }
+
+    // ---- system tray ----
+    static NotifyIcon CreateTray()
+    {
+        var menu = new ContextMenuStrip();
+        var header = menu.Items.Add($"XM5 Ambient  ·  {_cfg.hotkey} ({_cfg.behavior})");
+        header.Enabled = false;
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Settings…", null, (s, e) => OpenSettings());
+        menu.Items.Add("Reconnect headphones", null, (s, e) => _ = Task.Run(ForceReconnectAsync));
+        menu.Items.Add(new ToolStripSeparator());
+        menu.Items.Add("Quit", null, (s, e) => Application.Exit());
+
+        var ni = new NotifyIcon
+        {
+            Icon = MakeIcon(),
+            Text = $"XM5 Ambient  ({_cfg.hotkey})",
+            Visible = true,
+            ContextMenuStrip = menu
+        };
+        ni.DoubleClick += (s, e) => OpenSettings();
+        return ni;
+    }
+
+    static void OpenSettings()
+    {
+        var gui = Path.Combine(Dir, "sony-ambient-config.exe");
+        if (File.Exists(gui))
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(gui) { WorkingDirectory = Dir, UseShellExecute = true }); } catch { }
+    }
+
+    static async Task ForceReconnectAsync()
+    {
+        StreamSocket s; lock (_io) { s = _sock; _sock = null; _w = null; }
+        try { s?.Dispose(); } catch { }
+        await ConnectAsync();
+    }
+
+    // A tiny headphones glyph drawn at runtime (no .ico asset needed).
+    static Icon MakeIcon()
+    {
+        var bmp = new Bitmap(32, 32);
+        using (var g = Graphics.FromImage(bmp))
+        {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(Color.Transparent);
+            var col = Color.FromArgb(0x3B, 0x82, 0xF6);
+            using var pen = new Pen(col, 3f);
+            g.DrawArc(pen, 6, 7, 20, 18, 180, 180);   // headband
+            using var br = new SolidBrush(col);
+            g.FillRectangle(br, 5, 16, 6, 11);         // left ear cup
+            g.FillRectangle(br, 21, 16, 6, 11);        // right ear cup
+        }
+        return Icon.FromHandle(bmp.GetHicon());
     }
 }
