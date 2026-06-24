@@ -19,7 +19,10 @@ static class Program
 
     static AppConfig _cfg = new();
     static readonly object _io = new();
-    static StreamSocket _sock; static DataWriter _w; static int _seq;
+    static readonly System.Threading.SemaphoreSlim _writeLock = new(1, 1);
+    static StreamSocket _sock; static DataWriter _w;
+    static int _txSeq;               // sequence bit for our next command (kept in sync with received ACKs)
+    static int _lastRx = -2;         // last ambient state the headphones reported (for logging)
     static string _curMode;          // last mode set (for toggle alternation)
     static bool _triggerActive;      // hotkey key currently held
     static bool _needCtrl, _needAlt, _needShift, _needWin; static uint _triggerVk;
@@ -34,7 +37,7 @@ static class Program
         {
             var s = await SonyDevice.ConnectAsync();
             if (s == null) { Log("no headphones found (paired & connected?)"); return false; }
-            lock (_io) { _sock = s; _w = new DataWriter(s.OutputStream); _seq = 0; }
+            lock (_io) { _sock = s; _w = new DataWriter(s.OutputStream); _txSeq = 0; _lastRx = -2; }
             _ = ReadLoopAsync(s);
             Log("connected (warm)");
             return true;
@@ -53,10 +56,19 @@ static class Program
                 uint got = await r.LoadAsync(256);
                 if (got == 0) break;
                 var buf = new byte[got]; r.ReadBytes(buf);
-                foreach (var p in fr.Feed(buf))
+                foreach (var pkt in fr.Feed(buf))
                 {
-                    int flag = Protocol.AmbientFlag(p);
-                    if (flag >= 0 && _curMode == null) _curMode = flag == 1 ? "amb" : "nc"; // initialise once
+                    if (pkt.Type == Protocol.Ack) { Interlocked.Exchange(ref _txSeq, pkt.Seq); continue; }
+
+                    // ACK every message the headphones send, or the link stalls after a few exchanges.
+                    await WriteFrameAsync(Protocol.Frame(Protocol.Ack, (byte)(pkt.Seq ^ 1), System.Array.Empty<byte>()));
+
+                    int flag = Protocol.AmbientFlag(pkt.Payload);
+                    if (flag >= 0)
+                    {
+                        if (_curMode == null) _curMode = flag == 1 ? "amb" : "nc"; // initialise toggle direction once
+                        if (flag != _lastRx) { _lastRx = flag; Log($"rx state: {(flag == 1 ? "amb" : "nc")}"); }
+                    }
                 }
             }
         }
@@ -65,14 +77,24 @@ static class Program
         Log("read loop ended (disconnected)");
     }
 
+    // Serialize all writes (commands AND the ACKs sent from the read loop) on one socket.
+    static async Task<bool> WriteFrameAsync(byte[] frame)
+    {
+        DataWriter w; lock (_io) w = _w;
+        if (w == null) return false;
+        await _writeLock.WaitAsync();
+        try { w.WriteBytes(frame); await w.StoreAsync(); return true; }
+        catch (Exception ex) { Log("write failed: " + ex.Message); lock (_io) { _sock = null; _w = null; } return false; }
+        finally { _writeLock.Release(); }
+    }
+
     static async Task<bool> SendAsync(string mode)
     {
-        DataWriter w; int seq;
-        lock (_io) { w = _w; seq = _seq; }
-        if (w == null) return false;
-        var frame = Protocol.Frame((byte)seq, Protocol.AmbientSoundControl(mode, _cfg.ambientLevel));
-        try { w.WriteBytes(frame); await w.StoreAsync(); lock (_io) { _seq ^= 1; } return true; }
-        catch (Exception ex) { Log("send failed: " + ex.Message); lock (_io) { _sock = null; _w = null; } return false; }
+        int seq; lock (_io) seq = _txSeq;
+        var frame = Protocol.Frame(Protocol.DataMdr, (byte)seq, Protocol.AmbientSoundControl(mode, _cfg.ambientLevel));
+        bool ok = await WriteFrameAsync(frame);
+        if (ok) Interlocked.Exchange(ref _txSeq, seq ^ 1);   // flip optimistically; corrected by received ACKs
+        return ok;
     }
 
     static async Task ApplyAsync(string mode)

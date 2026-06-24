@@ -8,12 +8,12 @@ namespace SonyXm5.Core;
 /// </summary>
 public static class Protocol
 {
-    public const byte Start = 0x3E, End = 0x3C, Esc = 0x3D, DataMdr = 0x0C;
+    public const byte Start = 0x3E, End = 0x3C, Esc = 0x3D, DataMdr = 0x0C, Ack = 0x01;
 
     /// <summary>Wrap a payload in a full BT frame: START + escape(type seq size payload checksum) + END.</summary>
-    public static byte[] Frame(byte seq, byte[] payload)
+    public static byte[] Frame(byte dataType, byte seq, byte[] payload)
     {
-        var inner = new List<byte> { DataMdr, seq };
+        var inner = new List<byte> { dataType, seq };
         int n = payload.Length;
         inner.Add((byte)(n >> 24)); inner.Add((byte)(n >> 16)); inner.Add((byte)(n >> 8)); inner.Add((byte)n);
         inner.AddRange(payload);
@@ -51,12 +51,21 @@ public static class Protocol
         (payload.Length >= 5 && (payload[0] == 0x67 || payload[0] == 0x69) && payload[1] == 0x17) ? payload[4] : -1;
 }
 
-/// <summary>Incrementally turns a Bluetooth byte stream into decoded payloads, consuming each frame once.</summary>
+/// <summary>A decoded protocol frame: data type, sequence bit, and payload.</summary>
+public readonly struct Packet
+{
+    public readonly byte Type;
+    public readonly byte Seq;
+    public readonly byte[] Payload;
+    public Packet(byte type, byte seq, byte[] payload) { Type = type; Seq = seq; Payload = payload; }
+}
+
+/// <summary>Incrementally turns a Bluetooth byte stream into decoded packets, consuming each frame once.</summary>
 public sealed class FrameReader
 {
     private readonly List<byte> _buf = new();
 
-    public IEnumerable<byte[]> Feed(byte[] data)
+    public IEnumerable<Packet> Feed(byte[] data)
     {
         _buf.AddRange(data);
         while (true)
@@ -78,7 +87,7 @@ public sealed class FrameReader
             if (inner.Count < 7) continue;
             int size = (inner[2] << 24) | (inner[3] << 16) | (inner[4] << 8) | inner[5];
             if (size < 0 || 6 + size > inner.Count) continue;
-            yield return inner.GetRange(6, size).ToArray();
+            yield return new Packet(inner[0], inner[1], inner.GetRange(6, size).ToArray());
         }
     }
 }

@@ -11,12 +11,12 @@
 param([string]$InstallDir = "$env:LOCALAPPDATA\XM5Ambient")
 $ErrorActionPreference = 'Stop'
 
-# 1) Build straight into the install dir.
-& "$PSScriptRoot\build.ps1" -Output $InstallDir
-
-# 2) Stop any running daemon (old or new) so files aren't locked / no duplicates.
+# 1) Stop any running daemon FIRST so it doesn't lock files we're about to overwrite.
 Get-Process -Name 'sony-ambient-daemon' -ErrorAction SilentlyContinue | Stop-Process -Force
 Start-Sleep -Milliseconds 400
+
+# 2) Build straight into the install dir.
+& "$PSScriptRoot\build.ps1" -Output $InstallDir
 
 $ws = New-Object -ComObject WScript.Shell
 
