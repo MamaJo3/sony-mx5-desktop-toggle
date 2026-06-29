@@ -163,19 +163,23 @@ static class Program
 
     static IntPtr HookCb(int nCode, IntPtr wParam, IntPtr lParam)
     {
-        if (nCode >= 0 && _triggerVk != 0)
+        try
         {
-            int vk = Marshal.ReadInt32(lParam);
-            int msg = (int)wParam;
-            if (vk == _triggerVk)
+            if (nCode >= 0 && _triggerVk != 0)
             {
-                bool down = msg is WM_KEYDOWN or WM_SYSKEYDOWN;
-                bool up = msg is WM_KEYUP or WM_SYSKEYUP;
-                if (down && _triggerActive) return (IntPtr)1;                 // swallow auto-repeat
-                if (down && ModsHeld()) { _triggerActive = true; OnPress(); return (IntPtr)1; }
-                if (up && _triggerActive) { _triggerActive = false; OnRelease(); return (IntPtr)1; }
+                int vk = Marshal.ReadInt32(lParam);
+                int msg = (int)wParam;
+                if (vk == _triggerVk)
+                {
+                    bool down = msg is WM_KEYDOWN or WM_SYSKEYDOWN;
+                    bool up = msg is WM_KEYUP or WM_SYSKEYUP;
+                    if (down && _triggerActive) return (IntPtr)1;                 // swallow auto-repeat
+                    if (down && ModsHeld()) { _triggerActive = true; OnPress(); return (IntPtr)1; }
+                    if (up && _triggerActive) { _triggerActive = false; OnRelease(); return (IntPtr)1; }
+                }
             }
         }
+        catch (Exception ex) { Log("hook ex: " + ex.Message); }
         return CallNextHookEx(IntPtr.Zero, nCode, wParam, lParam);
     }
 
@@ -210,6 +214,12 @@ static class Program
         ParseHotkey(_cfg.hotkey);
         Log($"daemon start  hotkey='{_cfg.hotkey}' behavior={_cfg.behavior} A={_cfg.modeA} B={_cfg.modeB} level={_cfg.ambientLevel}");
         if (_triggerVk == 0) { Log("invalid hotkey; nothing to bind"); return 1; }
+
+        // Never die silently: log any unexpected failure instead of vanishing.
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => Log("FATAL: " + (e.ExceptionObject?.ToString() ?? "unknown"));
+        TaskScheduler.UnobservedTaskException += (s, e) => { Log("task ex: " + e.Exception.Message); e.SetObserved(); };
+        Application.ThreadException += (s, e) => Log("ui ex: " + e.Exception);
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
         _ = Task.Run(ConnectAsync);   // warm up the link off the UI thread
 
