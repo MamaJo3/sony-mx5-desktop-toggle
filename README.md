@@ -26,12 +26,21 @@ command — and keeps the connection warm so each key press takes **~0–2 ms** 
 ## Requirements
 
 - Windows 10 (build 19041+) or Windows 11.
-- A Sony **WH-1000XM5**, paired and connected to the PC over Bluetooth.
+- A compatible Sony headphone, paired and connected to the PC over Bluetooth.
 - [.NET 8 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/8.0) to run, or the
   .NET 8 SDK to build.
 
-> Other Sony models may work if they expose the same control service, but only the WH-1000XM5
-> has been tested. See [docs/PROTOCOL.md](docs/PROTOCOL.md).
+### Compatibility
+
+| Model | Status |
+|---|---|
+| WH-1000XM5 | ✅ Tested / developed against |
+| WH-1000XM6 | ✅ Confirmed working by a user |
+| Other recent Sony (ULT Wear, XM4, earbuds, …) | ❓ Untested — may work, since they share Sony's control service |
+
+The app discovers the headphones by their control service, so anything speaking the same
+protocol has a good chance of working. If you try another model, please open an issue and let me
+know. See [docs/PROTOCOL.md](docs/PROTOCOL.md) for the details.
 
 ## Install (easy — recommended)
 
